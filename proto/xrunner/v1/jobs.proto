@@ -1,0 +1,119 @@
+syntax = "proto3";
+
+package xrunner.v1;
+
+option go_package = "github.com/antonkrylov/xrunner/gen/go/xrunner/v1;xrunnerv1";
+
+import "google/protobuf/timestamp.proto";
+import "xrunner/v1/artifacts.proto";
+import "xrunner/v1/common.proto";
+import "xrunner/v1/policies.proto";
+
+message InlineWorkload {
+  string executable = 1;
+  repeated string args = 2;
+  bytes stdin = 3;
+}
+
+message ArtifactWorkload {
+  ArtifactRef artifact = 1;
+  string entrypoint = 2;
+  repeated string args = 3;
+}
+
+message DockerRunWorkload {
+  string image = 1;
+  repeated string command = 2;
+  map<string, string> container_env = 3;
+  repeated string mounts = 4;
+  string workdir = 5;
+  string network = 6;
+  bool keep_container = 7;
+  bool interactive = 8;
+  bool tty = 9;
+  bool detach = 10;
+  string entrypoint = 11;
+  repeated string extra_args = 12;
+}
+
+message DockerBuildWorkload {
+  string context_dir = 1;
+  string dockerfile = 2;
+  repeated string tags = 3;
+  repeated string platforms = 4;
+  repeated string build_args = 5;
+  repeated string secrets = 6;
+  repeated string cache_from = 7;
+  repeated string cache_to = 8;
+  bool push = 9;
+  bool load = 10;
+  bool no_cache = 11;
+  bool quiet = 12;
+  string builder = 13;
+  bool use_buildkit = 14;
+  repeated string compose_files = 15;
+  repeated string extra_args = 16;
+}
+
+message Workload {
+  oneof kind {
+    InlineWorkload inline = 1;
+    ArtifactWorkload artifact_based = 2;
+    DockerRunWorkload docker_run = 3;
+    DockerBuildWorkload docker_build = 4;
+  }
+}
+
+message Job {
+  JobRef ref = 1;
+  string display_name = 2;
+  Workload workload = 3;
+  map<string, string> env = 4;
+  JobState state = 5;
+  google.protobuf.Timestamp create_time = 6;
+  google.protobuf.Timestamp update_time = 7;
+  ResourceHints resource = 8;
+  PolicyOverrides policy = 9;
+  int32 exit_code = 10;
+  string status_message = 11;
+  SandboxSpec sandbox = 12;
+}
+
+message SubmitJobRequest {
+  string tenant_id = 1;
+  string display_name = 2;
+  Workload workload = 3;
+  map<string, string> env = 4;
+  ResourceHints resource = 5;
+  PolicyOverrides policy = 6;
+  SandboxSpec sandbox = 7;
+}
+
+message SubmitJobResponse {
+  Job job = 1;
+}
+
+message GetJobRequest {
+  JobRef ref = 1;
+}
+
+message ListJobsRequest {
+  string tenant_id = 1;
+}
+
+message ListJobsResponse {
+  repeated Job jobs = 1;
+}
+
+message StreamJobLogsRequest {
+  JobRef ref = 1;
+  // If non-zero, start streaming after this per-job log offset.
+  uint64 after_offset = 2;
+}
+
+service JobService {
+  rpc SubmitJob(SubmitJobRequest) returns (SubmitJobResponse);
+  rpc GetJob(GetJobRequest) returns (Job);
+  rpc ListJobs(ListJobsRequest) returns (ListJobsResponse);
+  rpc StreamJobLogs(StreamJobLogsRequest) returns (stream LogChunk);
+}

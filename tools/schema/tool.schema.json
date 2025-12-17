@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "OpenAI Tool Definition",
+  "type": "object",
+  "required": ["type", "function"],
+  "properties": {
+    "type": {
+      "const": "function"
+    },
+    "strict": {
+      "type": "boolean"
+    },
+    "function": {
+      "type": "object",
+      "required": ["name", "description", "parameters"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z0-9_]+$"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 4
+        },
+        "parameters": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

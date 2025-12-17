@@ -1,0 +1,33 @@
+{
+  "$schema": "../schema/tool.schema.json",
+  "type": "function",
+  "strict": true,
+  "function": {
+    "name": "write_file_atomic",
+    "description": "Write a UTF-8 text file relative to the session workspace root (atomic rename) and emit a unified diff event.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "Relative file path within the session workspace."
+        },
+        "content": {
+          "type": "string",
+          "description": "Full file contents to write."
+        },
+        "mode": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 511,
+          "description": "Optional file mode as a decimal number (e.g. 420 for 0644). 0 uses default 0644."
+        }
+      },
+      "required": [
+        "path",
+        "content"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

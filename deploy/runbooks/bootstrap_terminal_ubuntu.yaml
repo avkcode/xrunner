@@ -1,0 +1,15 @@
+apiVersion: xrunner.dev/v1alpha1
+kind: Runbook
+metadata:
+  name: bootstrap-terminal-ubuntu
+spec:
+  steps:
+    - name: install-terminal-tools
+      type: ssh
+      host: root@YOUR_HOST
+      timeoutSeconds: 300
+      script: |
+        set -eu
+        export DEBIAN_FRONTEND=noninteractive
+        apt-get update
+        apt-get install -y tmux htop ncurses-term tree

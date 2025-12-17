@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+package xrunner.v1;
+
+option go_package = "github.com/antonkrylov/xrunner/gen/go/xrunner/v1;xrunnerv1";
+
+import "google/protobuf/timestamp.proto";
+
+message JobRef {
+  string tenant_id = 1;
+  string job_id = 2;
+}
+
+enum JobState {
+  JOB_STATE_UNSPECIFIED = 0;
+  JOB_STATE_ACCEPTED = 1;
+  JOB_STATE_RUNNING = 2;
+  JOB_STATE_SUCCEEDED = 3;
+  JOB_STATE_FAILED = 4;
+}
+
+message ResourceHints {
+  double cpu_cores = 1;
+  int64 memory_bytes = 2;
+  bool needs_gpu = 3;
+}
+
+message LogChunk {
+  google.protobuf.Timestamp timestamp = 1;
+  string stream = 2;
+  bytes data = 3;
+  // Offset is a monotonically increasing per-job cursor that allows clients to
+  // resume streaming without duplicating already received chunks.
+  uint64 offset = 4;
+}
+
+enum SandboxType {
+  SANDBOX_TYPE_UNSPECIFIED = 0;
+  SANDBOX_TYPE_NSJAIL = 1;
+  SANDBOX_TYPE_NSJAIL_DOCKER = 2;
+  SANDBOX_TYPE_DOCKER = 3;
+}
+
+message SandboxSpec {
+  SandboxType type = 1;
+  string nsjail_config = 2;
+  string sandbox_bin = 3;
+  repeated string binds = 4;
+  string workdir = 5;
+  string log_path = 6;
+  repeated string extra_args = 7;
+}

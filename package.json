@@ -1,0 +1,25 @@
+{
+  "name": "xrunner",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "generate:ts": "mkdir -p gen/ts && protoc --proto_path=proto --ts_proto_out=gen/ts --ts_proto_opt=esModuleInterop=true,outputServices=grpc-js,outputClientImpl=true proto/xrunner/v1/*.proto"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/antonkrylov/xrunner.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/antonkrylov/xrunner/issues"
+  },
+  "homepage": "https://github.com/antonkrylov/xrunner#readme",
+  "devDependencies": {
+    "ts-proto": "^2.8.3"
+  }
+}

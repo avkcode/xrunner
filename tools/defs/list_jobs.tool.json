@@ -1,0 +1,36 @@
+{
+  "$schema": "../schema/tool.schema.json",
+  "type": "function",
+  "strict": true,
+  "function": {
+    "name": "list_jobs",
+    "description": "Return the latest jobs known to the xrunner control plane for the requested tenant.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "tenant_id": {
+          "type": "string",
+          "description": "Tenant identifier such as default or prod." 
+        },
+        "state": {
+          "type": "string",
+          "description": "Optional state filter; accepted|running|succeeded|failed.",
+          "enum": [
+            "accepted",
+            "running",
+            "succeeded",
+            "failed"
+          ]
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "description": "Maximum number of jobs to return (default 20)."
+        }
+      },
+      "required": ["tenant_id"],
+      "additionalProperties": false
+    }
+  }
+}

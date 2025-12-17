@@ -1,0 +1,27 @@
+[Unit]
+Description=xrunner SSH gateway (xrunner-remote)
+After=network-online.target xrunner-api.service
+Wants=network-online.target
+Requires=xrunner-api.service
+
+[Service]
+Type=simple
+User=root
+Group=root
+EnvironmentFile=-/etc/default/xrunner-remote
+ExecStart=/usr/local/bin/xrunner-remote \
+  --listen ${XRUNNER_REMOTE_LISTEN} \
+  --upstream ${XRUNNER_REMOTE_UPSTREAM} \
+  --upstream-tls=${XRUNNER_REMOTE_UPSTREAM_TLS} \
+  --workspace-root ${XRUNNER_REMOTE_WORKSPACE_ROOT} \
+  --unsafe-allow-rootfs=${XRUNNER_REMOTE_UNSAFE_ALLOW_ROOTFS} \
+  --sessions-dir ${XRUNNER_REMOTE_SESSIONS_DIR} \
+  ${XRUNNER_REMOTE_EXTRA_ARGS}
+WorkingDirectory=/var/lib/xrunner
+StateDirectory=xrunner
+Restart=on-failure
+RestartSec=3s
+LimitNOFILE=65535
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,16 @@
+apiVersion: xrunner.dev/v1alpha1
+kind: Runbook
+metadata:
+  name: ssh-smoke
+spec:
+  steps:
+    - name: remote-basics
+      type: ssh
+      host: root@YOUR_HOST
+      timeoutSeconds: 20
+      script: |
+        set -eu
+        echo "whoami=$(whoami)"
+        echo "host=$(hostname)"
+        date -Is
+        ps -ax

@@ -1,0 +1,38 @@
+{
+  "$schema": "../schema/tool.schema.json",
+  "type": "function",
+  "strict": true,
+  "function": {
+    "name": "shell",
+    "description": "Run a shell command inside the session workspace and stream stdout/stderr as tool output chunks.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "type": "string",
+          "description": "Shell command to execute (runs via sh -lc)."
+        },
+        "cwd": {
+          "type": "string",
+          "description": "Optional working directory relative to the session workspace root."
+        },
+        "env": {
+          "type": "object",
+          "description": "Optional environment variables to set for the command.",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "pty": {
+          "type": "boolean",
+          "description": "If true, run under a PTY (stdout/stderr merged).",
+          "default": true
+        }
+      },
+      "required": [
+        "cmd"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package xrunner.v1;
+
+option go_package = "github.com/antonkrylov/xrunner/gen/go/xrunner/v1;xrunnerv1";
+
+import "google/protobuf/timestamp.proto";
+
+message ArtifactRef {
+  string artifact_id = 1;
+  string digest = 2;
+  string uri = 3;
+}
+
+message Artifact {
+  ArtifactRef ref = 1;
+  string display_name = 2;
+  string media_type = 3;
+  int64 size_bytes = 4;
+  google.protobuf.Timestamp created_at = 5;
+}
+
+message RegisterArtifactRequest {
+  string tenant_id = 1;
+  string display_name = 2;
+  string media_type = 3;
+  bytes content = 4;
+}
+
+message RegisterArtifactResponse {
+  Artifact artifact = 1;
+}
+
+message GetArtifactRequest {
+  ArtifactRef ref = 1;
+}
+
+service ArtifactService {
+  rpc RegisterArtifact(RegisterArtifactRequest) returns (RegisterArtifactResponse);
+  rpc GetArtifact(GetArtifactRequest) returns (Artifact);
+}

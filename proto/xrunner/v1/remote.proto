@@ -1,0 +1,353 @@
+syntax = "proto3";
+
+package xrunner.v1;
+
+option go_package = "github.com/antonkrylov/xrunner/gen/go/xrunner/v1;xrunnerv1";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+message RemoteVersionResponse {
+  string version = 1;
+  string commit = 2;
+  string build_time = 3;
+}
+
+service RemoteControlService {
+  rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty);
+  rpc Version(google.protobuf.Empty) returns (RemoteVersionResponse);
+}
+
+message ReadFileRequest {
+  string path = 1;
+}
+
+message ReadFileResponse {
+  bytes data = 1;
+}
+
+message WriteFileRequest {
+  string path = 1;
+  bytes data = 2;
+  uint32 mode = 3;
+}
+
+service RemoteFileService {
+  rpc ReadFile(ReadFileRequest) returns (ReadFileResponse);
+  rpc WriteFileAtomic(WriteFileRequest) returns (google.protobuf.Empty);
+}
+
+message OpenPTYRequest {
+  string command = 1;
+  repeated string args = 2;
+  string cwd = 3;
+  map<string, string> env = 4;
+  uint32 cols = 5;
+  uint32 rows = 6;
+}
+
+message OpenPTYResponse {
+  string session_id = 1;
+}
+
+message PTYStreamRequest {
+  string session_id = 1;
+}
+
+message PTYOutputChunk {
+  google.protobuf.Timestamp timestamp = 1;
+  bytes data = 2;
+}
+
+message PTYWriteRequest {
+  string session_id = 1;
+  bytes data = 2;
+}
+
+message PTYResizeRequest {
+  string session_id = 1;
+  uint32 cols = 2;
+  uint32 rows = 3;
+}
+
+message PTYCloseRequest {
+  string session_id = 1;
+}
+
+service RemotePTYService {
+  rpc OpenPTY(OpenPTYRequest) returns (OpenPTYResponse);
+  rpc StreamPTY(PTYStreamRequest) returns (stream PTYOutputChunk);
+  rpc WritePTY(PTYWriteRequest) returns (google.protobuf.Empty);
+  rpc ResizePTY(PTYResizeRequest) returns (google.protobuf.Empty);
+  rpc ClosePTY(PTYCloseRequest) returns (google.protobuf.Empty);
+}
+
+message EnsureShellSessionRequest {
+  // Stable durable session name (e.g. "ops").
+  string name = 1;
+
+  // Optional shell to start when creating a new session (defaults to "sh").
+  string shell = 2;
+  repeated string args = 3;
+
+  // Optional working dir/env used only on initial create.
+  string cwd = 4;
+  map<string, string> env = 5;
+
+  // Initial size (best-effort).
+  uint32 cols = 6;
+  uint32 rows = 7;
+}
+
+message EnsureShellSessionResponse {
+  string name = 1;
+  uint64 log_size = 2;
+}
+
+message ShellStreamRequest {
+  string name = 1;
+  uint64 offset = 2;
+  bool follow = 3;
+
+  // Max bytes per chunk (defaults to 64KiB).
+  uint32 max_chunk_bytes = 4;
+
+  // Poll interval while following (defaults to 50ms).
+  uint32 poll_ms = 5;
+}
+
+message ShellOutputChunk {
+  google.protobuf.Timestamp timestamp = 1;
+  uint64 offset = 2;
+  bytes data = 3;
+}
+
+message ShellWriteRequest {
+  string name = 1;
+  bytes data = 2;
+}
+
+message ShellResizeRequest {
+  string name = 1;
+  uint32 cols = 2;
+  uint32 rows = 3;
+}
+
+message ShellCloseRequest {
+  string name = 1;
+  // If true, kills the underlying durable session.
+  bool kill = 2;
+}
+
+message ShellTailRequest {
+  string name = 1;
+  uint32 lines = 2;
+  // Max bytes returned (defaults to 1MiB).
+  uint32 max_bytes = 3;
+}
+
+message ShellTailResponse {
+  string name = 1;
+  bytes data = 2;
+  uint64 log_size = 3;
+}
+
+message ShellRunRequest {
+  string name = 1;
+  string command = 2;
+  // Optional client-supplied command id (server generates one if empty).
+  string command_id = 3;
+  // Timeout in milliseconds (0 uses server default).
+  uint32 timeout_ms = 4;
+}
+
+message ShellRunResponse {
+  string name = 1;
+  string command_id = 2;
+  int32 exit_code = 3;
+  uint64 begin_offset = 4;
+  uint64 end_offset = 5;
+  google.protobuf.Timestamp started_at = 6;
+  google.protobuf.Timestamp completed_at = 7;
+}
+
+message ShellClientHello {
+  string name = 1;
+  // If non-zero, start streaming from this byte offset in the durable log.
+  uint64 after_offset = 2;
+  // Optional stable client identifier to enable server-side resume.
+  string client_id = 3;
+  // If true and after_offset==0, server resumes from last acknowledged offset for this client.
+  bool resume_from_last_ack = 4;
+
+  // Output coalescing knobs.
+  uint32 max_chunk_bytes = 5;
+  uint32 poll_ms = 6;
+
+  enum Compression {
+    COMPRESSION_NONE = 0;
+    COMPRESSION_ZSTD = 1;
+  }
+  Compression compression = 7;
+}
+
+message ShellClientAck {
+  string name = 1;
+  string client_id = 2;
+  uint64 ack_offset = 3;
+}
+
+message ShellClientInput {
+  string name = 1;
+  bytes data = 2;
+}
+
+message ShellClientResize {
+  string name = 1;
+  uint32 cols = 2;
+  uint32 rows = 3;
+}
+
+message ShellClientRun {
+  string name = 1;
+  string command = 2;
+  // Optional client-supplied command id (server generates one if empty).
+  string command_id = 3;
+  // Timeout in milliseconds (0 uses server default).
+  uint32 timeout_ms = 4;
+}
+
+message ShellClientClose {
+  string name = 1;
+  bool kill = 2;
+}
+
+message ShellClientMsg {
+  oneof kind {
+    ShellClientHello hello = 1;
+    ShellClientAck ack = 2;
+    ShellClientInput input = 3;
+    ShellClientResize resize = 4;
+    ShellClientRun run = 5;
+    ShellClientClose close = 6;
+  }
+}
+
+message ShellServerHello {
+  string name = 1;
+  uint64 start_offset = 2;
+  uint64 log_size = 3;
+  ShellClientHello.Compression compression = 4;
+}
+
+message ShellServerChunk {
+  string name = 1;
+  uint64 offset = 2;
+  bytes data = 3;
+  // Uncompressed size of the chunk. If compression is NONE, this equals len(data).
+  uint32 uncompressed_len = 4;
+}
+
+message ShellServerCommandEvent {
+  string name = 1;
+  ShellCommandRecord record = 2;
+  enum Phase {
+    PHASE_UNSPECIFIED = 0;
+    PHASE_STARTED = 1;
+    PHASE_COMPLETED = 2;
+  }
+  Phase phase = 3;
+}
+
+message ShellServerMsg {
+  oneof kind {
+    ShellServerHello hello = 1;
+    ShellServerChunk chunk = 2;
+    ShellServerCommandEvent command = 3;
+  }
+}
+
+service RemoteShellService {
+  rpc EnsureShellSession(EnsureShellSessionRequest) returns (EnsureShellSessionResponse);
+  rpc StreamShell(ShellStreamRequest) returns (stream ShellOutputChunk);
+  rpc WriteShell(ShellWriteRequest) returns (google.protobuf.Empty);
+  rpc ResizeShell(ShellResizeRequest) returns (google.protobuf.Empty);
+  rpc TailShell(ShellTailRequest) returns (ShellTailResponse);
+  rpc RunShell(ShellRunRequest) returns (ShellRunResponse);
+  rpc CloseShell(ShellCloseRequest) returns (google.protobuf.Empty);
+  rpc AttachShell(stream ShellClientMsg) returns (stream ShellServerMsg);
+
+  rpc ListShellCommands(ListShellCommandsRequest) returns (ListShellCommandsResponse);
+  rpc SearchShell(ShellSearchRequest) returns (ShellSearchResponse);
+  rpc ListShellArtifacts(ListShellArtifactsRequest) returns (ListShellArtifactsResponse);
+}
+
+message ShellCommandRecord {
+  string name = 1;
+  string command_id = 2;
+  string command = 3;
+  int32 exit_code = 4;
+  uint64 begin_offset = 5;
+  uint64 end_offset = 6;
+  google.protobuf.Timestamp started_at = 7;
+  google.protobuf.Timestamp completed_at = 8;
+  uint64 output_bytes = 9;
+  repeated string artifact_ids = 10;
+}
+
+message ShellArtifact {
+  string id = 1;
+  string name = 2;
+  string command_id = 3;
+  string type = 4; // e.g. "go_test_failure"
+  string title = 5;
+  bytes data_json = 6; // structured payload for clients
+  google.protobuf.Timestamp created_at = 7;
+}
+
+message ListShellArtifactsRequest {
+  string name = 1;
+  string command_id = 2; // optional filter
+  uint32 limit = 3;      // default 50
+}
+
+message ListShellArtifactsResponse {
+  repeated ShellArtifact artifacts = 1;
+}
+
+message ListShellCommandsRequest {
+  string name = 1;
+  uint32 limit = 2; // default 50
+}
+
+message ListShellCommandsResponse {
+  repeated ShellCommandRecord commands = 1;
+}
+
+message ShellSearchRequest {
+  string name = 1;
+  bytes query = 2;
+
+  // Optional limits.
+  uint64 start_offset = 3;
+  uint64 end_offset = 4; // 0 means EOF
+
+  // Optional filters.
+  string command_id = 5;
+  google.protobuf.Timestamp start_time = 6;
+  google.protobuf.Timestamp end_time = 7;
+
+  uint32 max_matches = 8;   // default 50
+  uint32 context_bytes = 9; // default 80
+}
+
+message ShellSearchMatch {
+  string command_id = 1;
+  uint64 offset = 2;
+  bytes snippet = 3;
+}
+
+message ShellSearchResponse {
+  repeated ShellSearchMatch matches = 1;
+  uint64 log_size = 2;
+}

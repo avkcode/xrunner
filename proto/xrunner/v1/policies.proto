@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package xrunner.v1;
+
+option go_package = "github.com/antonkrylov/xrunner/gen/go/xrunner/v1;xrunnerv1";
+
+message PolicyOverrides {
+  bool allow_network = 1;
+  string network_profile = 2;
+  int64 max_execution_seconds = 3;
+}

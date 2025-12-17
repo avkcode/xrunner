@@ -1,0 +1,29 @@
+{
+  "$schema": "../schema/tool.schema.json",
+  "type": "function",
+  "strict": true,
+  "function": {
+    "name": "stream_job_logs",
+    "description": "Stream stdout/stderr for a specific job until completion and return the concatenated text.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "tenant_id": {
+          "type": "string",
+          "description": "Tenant identifier that owns the job"
+        },
+        "job_id": {
+          "type": "string",
+          "description": "Opaque job identifier emitted by JobService.SubmitJob"
+        },
+        "follow": {
+          "type": "boolean",
+          "description": "If true, block until the worker finishes and include trailing logs",
+          "default": true
+        }
+      },
+      "required": ["tenant_id", "job_id"],
+      "additionalProperties": false
+    }
+  }
+}

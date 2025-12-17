@@ -1,0 +1,23 @@
+[Unit]
+Description=xrunner control plane API
+After=network-online.target xrunner-worker.service
+Wants=network-online.target
+Requires=xrunner-worker.service
+
+[Service]
+Type=simple
+User=xrunner
+Group=xrunner
+EnvironmentFile=-/etc/default/xrunner-api
+ExecStart=/usr/local/bin/xrunner-api \
+  --listen ${XRUNNER_API_LISTEN} \
+  --worker ${XRUNNER_WORKER_ADDR} \
+  ${XRUNNER_API_EXTRA_ARGS}
+WorkingDirectory=/var/lib/xrunner
+StateDirectory=xrunner
+Restart=on-failure
+RestartSec=5s
+LimitNOFILE=65535
+
+[Install]
+WantedBy=multi-user.target

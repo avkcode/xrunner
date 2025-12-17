@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+package xrunner.v1;
+
+option go_package = "github.com/antonkrylov/xrunner/gen/go/xrunner/v1;xrunnerv1";
+
+import "google/protobuf/timestamp.proto";
+import "xrunner/v1/common.proto";
+import "xrunner/v1/jobs.proto";
+import "xrunner/v1/policies.proto";
+
+message WorkerRegistration {
+  string worker_id = 1;
+  string address = 2;
+  repeated string capabilities = 3;
+}
+
+message RegisterWorkerRequest {
+  WorkerRegistration registration = 1;
+}
+
+message RegisterWorkerResponse {
+  google.protobuf.Timestamp registered_at = 1;
+}
+
+message JobAssignment {
+  JobRef ref = 1;
+  Workload workload = 2;
+  map<string, string> env = 3;
+  PolicyOverrides policy = 4;
+  ResourceHints resource = 5;
+  SandboxSpec sandbox = 6;
+}
+
+message RunJobResponse {
+  JobRef ref = 1;
+  JobState final_state = 2;
+  int32 exit_code = 3;
+  string status_message = 4;
+  google.protobuf.Timestamp started_at = 5;
+  google.protobuf.Timestamp completed_at = 6;
+  repeated LogChunk logs = 7;
+  bool terminal = 8;
+}
+
+service WorkerService {
+  rpc RunJob(JobAssignment) returns (stream RunJobResponse);
+}
+
+service WorkerRegistryService {
+  rpc RegisterWorker(RegisterWorkerRequest) returns (RegisterWorkerResponse);
+}

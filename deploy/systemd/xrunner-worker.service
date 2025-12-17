@@ -1,0 +1,25 @@
+[Unit]
+Description=xrunner worker plane (nsjail/docker)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=xrunner
+Group=xrunner
+EnvironmentFile=-/etc/default/xrunner-worker
+ExecStart=/usr/local/bin/xrunner-worker \
+  --listen ${XRUNNER_WORKER_LISTEN} \
+  --nsjail-config ${XRUNNER_WORKER_NSJAIL_CONFIG} \
+  --workspace ${XRUNNER_WORKER_WORKSPACE} \
+  --default-sandbox-type ${XRUNNER_WORKER_SANDBOX_TYPE} \
+  ${XRUNNER_WORKER_EXTRA_FLAGS}
+WorkingDirectory=/var/lib/xrunner
+StateDirectory=xrunner
+RuntimeDirectory=xrunner
+Restart=on-failure
+RestartSec=5s
+LimitNOFILE=65535
+
+[Install]
+WantedBy=multi-user.target

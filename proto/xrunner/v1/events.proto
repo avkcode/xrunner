@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package xrunner.v1;
+
+option go_package = "github.com/antonkrylov/xrunner/gen/go/xrunner/v1;xrunnerv1";
+
+import "google/protobuf/timestamp.proto";
+import "xrunner/v1/common.proto";
+import "xrunner/v1/jobs.proto";
+
+message JobEvent {
+  Job job = 1;
+  uint64 version = 2;
+  google.protobuf.Timestamp emitted_at = 3;
+}
+
+message LogEvent {
+  JobRef ref = 1;
+  LogChunk chunk = 2;
+  uint64 offset = 3;
+  google.protobuf.Timestamp emitted_at = 4;
+}
